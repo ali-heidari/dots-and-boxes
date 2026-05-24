@@ -76,7 +76,7 @@ export function renderBoard(container, state, options = {}) {
         id: hEdgeKey(r, c),
         x1: dotX(c),      y1: dotY(r),
         x2: dotX(c + 1),  y2: dotY(r),
-        stroke: drawn ? COLOR_EDGE : COLOR_GHOST,
+        stroke: drawn ? _edgeColor(drawn) : COLOR_GHOST,
         'stroke-width': drawn ? EDGE_W : GHOST_W,
         'stroke-linecap': 'round',
       })
@@ -97,7 +97,7 @@ export function renderBoard(container, state, options = {}) {
         id: vEdgeKey(r, c),
         x1: dotX(c),  y1: dotY(r),
         x2: dotX(c),  y2: dotY(r + 1),
-        stroke: drawn ? COLOR_EDGE : COLOR_GHOST,
+        stroke: drawn ? _edgeColor(drawn) : COLOR_GHOST,
         'stroke-width': drawn ? EDGE_W : GHOST_W,
         'stroke-linecap': 'round',
       })
@@ -137,12 +137,24 @@ export function updateBoard(state) {
   _state = state
   const { grid } = state
 
-  // Update changed box fills
+  // Update changed box fills and recolor all 4 edges to the box owner
   for (let r = 0; r < grid; r++) {
     for (let c = 0; c < grid; c++) {
       if (state.boxes[r][c] !== prev.boxes[r][c]) {
         const el = _svg.getElementById(boxKey(r, c))
         if (el) el.setAttribute('fill', _boxFill(state.boxes[r][c]))
+
+        const owner = state.boxes[r][c]
+        const color = _edgeColor(owner)
+        const edges = [
+          _svg.getElementById(hEdgeKey(r,     c)),
+          _svg.getElementById(hEdgeKey(r + 1, c)),
+          _svg.getElementById(vEdgeKey(r, c)),
+          _svg.getElementById(vEdgeKey(r, c + 1)),
+        ]
+        for (const edge of edges) {
+          if (edge) edge.setAttribute('stroke', color)
+        }
       }
     }
   }
@@ -153,7 +165,7 @@ export function updateBoard(state) {
       if (state.hEdges[r][c] && !prev.hEdges[r][c]) {
         const line = _svg.getElementById(hEdgeKey(r, c))
         if (line) {
-          line.setAttribute('stroke', COLOR_EDGE)
+          line.setAttribute('stroke', _edgeColor(state.hEdges[r][c]))
           line.setAttribute('stroke-width', EDGE_W)
         }
         const hit = _svg.getElementById(hitHKey(r, c))
@@ -168,7 +180,7 @@ export function updateBoard(state) {
       if (state.vEdges[r][c] && !prev.vEdges[r][c]) {
         const line = _svg.getElementById(vEdgeKey(r, c))
         if (line) {
-          line.setAttribute('stroke', COLOR_EDGE)
+          line.setAttribute('stroke', _edgeColor(state.vEdges[r][c]))
           line.setAttribute('stroke-width', EDGE_W)
         }
         const hit = _svg.getElementById(hitVKey(r, c))
@@ -229,6 +241,12 @@ function _boxFill(owner) {
   if (owner === 'A') return COLOR_A
   if (owner === 'B') return COLOR_B
   return 'transparent'
+}
+
+function _edgeColor(player) {
+  if (player === 'A') return COLOR_A
+  if (player === 'B') return COLOR_B
+  return COLOR_EDGE
 }
 
 function _makeHitH(r, c, grid) {

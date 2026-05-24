@@ -70,9 +70,9 @@ export function applyMove(state, move) {
   }
 
   if (move.axis === 'H') {
-    newState.hEdges[move.row][move.col] = true
+    newState.hEdges[move.row][move.col] = newState.turn
   } else {
-    newState.vEdges[move.row][move.col] = true
+    newState.vEdges[move.row][move.col] = newState.turn
   }
 
   const boxesClaimed = getCompletedBoxes(newState, move)
